@@ -1,0 +1,4 @@
+#!/bin/bash
+ip link set enp1s0 promisc on
+ip a | grep -i promisc
+echo "[>] Interface enp1s0 set on promisc mode"
