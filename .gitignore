@@ -10,3 +10,5 @@ ml/log
 ml/alerts
 ml/model
 ml/statistics
+
+*.idea
