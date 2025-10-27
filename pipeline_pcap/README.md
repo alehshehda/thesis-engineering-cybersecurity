@@ -117,7 +117,7 @@ source venv/bin/activate
 ## Configuration
 
 Edit `pipeline_config.json` to match your configuration:
-```json
+```bash
 {
   "capture": {
     "interface": "enp1s0",                    // - Network interface to capture packets from
