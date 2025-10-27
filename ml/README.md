@@ -255,7 +255,7 @@ Active Mean → Active Mean (no space)
 **Created**: Only when attacks detected
 
 Example alert:
-```json
+```bash
 {
     "alert_id": "SSH_BF_1921681050_20251027_153322",        // - Unique alert identifier (format: SSH_BF_ip_timestamp)
     "timestamp": "2025-10-27T15:33:22.123456",              // - ISO 8601 timestamp when alert was generated
@@ -291,7 +291,7 @@ Example alert:
 **Created**: Only when attacks detected
 
 Example statistics:
-```json
+```bash
 {
     "timestamp": "2025-10-27T15:33:22.456789",                // - ISO 8601 timestamp when statistics were generated
     "csv_filename": "capture_20251027_153221.pcap_Flow.csv",  // - Source CSV file that was analyzed
