@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/ml/alerts" />
+      <excludeFolder url="file://$MODULE_DIR$/ml/log" />
+      <excludeFolder url="file://$MODULE_DIR$/ml/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/ml/model" />
+      <excludeFolder url="file://$MODULE_DIR$/ml/statistics" />
+      <excludeFolder url="file://$MODULE_DIR$/ml/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/pipeline_pcap/csv" />
+      <excludeFolder url="file://$MODULE_DIR$/pipeline_pcap/log" />
+      <excludeFolder url="file://$MODULE_DIR$/pipeline_pcap/pcap" />
+      <excludeFolder url="file://$MODULE_DIR$/pipeline_pcap/processed" />
+      <excludeFolder url="file://$MODULE_DIR$/pipeline_pcap/venv" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.13" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="py.test" />
+  </component>
+</module>

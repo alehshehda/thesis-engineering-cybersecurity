@@ -1,0 +1,41 @@
+{
+    "detection": {
+        "threshold": 0.80,
+        "min_attack_flows": 3,
+        "window_size_minutes": 5,
+        "window_mode": "rolling",
+        "ssh_port": 22
+    },
+    "paths": {
+        "csv_input": "/root/Thesis/pipeline_pcap/csv/",
+        "csv_processed": "/root/Thesis/pipeline_pcap/processed/",
+        "alerts": "/root/Thesis/ml/alerts/",
+        "logs": "/root/Thesis/ml/log/",
+        "statistics": "/root/Thesis/ml/statistics/",
+        "models": "/root/Thesis/ml/model/",
+        "dataset": "/root/Thesis/dataset/CIC-IDS-2017/CSVs/MachineLearningCVE/"
+    },
+    "processing": {
+        "wait_time_seconds": 10,
+        "process_existing_on_startup": "True",
+        "sequential_processing": "True",
+        "max_csv_cache_size": 10
+    },
+    "logging": {
+        "level": "INFO",
+        "max_bytes": 1073741824,
+        "backup_count": 5,
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    },
+    "model": {
+        "algorithm": "random_forest",
+        "random_forest": {
+            "n_estimators": 100,
+            "max_depth": 20,
+            "min_samples_split": 5,
+            "min_samples_leaf": 2,
+            "class_weight": "balanced",
+            "random_state": 42
+        }
+    }
+}

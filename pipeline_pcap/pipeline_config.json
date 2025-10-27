@@ -1,0 +1,37 @@
+{
+  "capture": {
+    "interface": "enp1s0",
+    "bpf_filter": "host 192.168.10.50",
+    "snaplen": 128,
+    "rotation_seconds": 60,
+    "enabled": true
+  },
+  "paths": {
+    "pcap_dir": "/root/Thesis/pipeline_pcap/pcap",
+    "csv_dir": "/root/Thesis/pipeline_pcap/csv",
+    "log_dir": "/root/Thesis/pipeline_pcap/log",
+    "cic_log_dir": "/root/Thesis/pipeline_pcap/log/cicflowmeter_log"
+  },
+  "retention": {
+    "pcap_minutes": 30,
+    "csv_minutes": 30,
+    "cleanup_interval_seconds": 60
+  },
+  "processing": {
+    "worker_threads": 2,
+    "conversion_timeout": 300,
+    "max_retries": 3,
+    "processing_delay_seconds": 2,
+    "file_close_wait_seconds": 5
+  },
+  "java_cicflowmeter": {
+    "cic_cmd_script": "/root/Thesis/pipeline_pcap/cic_cmd.sh",
+    "enabled": true
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(levelname)s - %(message)s",
+    "max_bytes": 1073741824,
+    "backup_count": 5
+  }
+}
