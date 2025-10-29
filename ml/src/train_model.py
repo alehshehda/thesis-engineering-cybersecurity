@@ -298,7 +298,7 @@ def main():
     # Train model
     trainer.train_model(X_train, y_train, X_test, y_test)
 
-    print("\nTraining complete! Model saved to models/ directory")
+    print("\nTraining complete! Model saved to model/ directory")
 
 if __name__ == "__main__":
     main()

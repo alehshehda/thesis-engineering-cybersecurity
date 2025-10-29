@@ -401,8 +401,10 @@ class CleanupManager(threading.Thread):
         self.config = config
         self.pcap_dir = config.get('paths', 'pcap_dir')
         self.csv_dir = config.get('paths', 'csv_dir')
+        self.csv_processed_dir = config.get('paths', 'csv_processed_dir')  # NEW
         self.pcap_retention_mins = config.get('retention', 'pcap_minutes', default=30)
         self.csv_retention_mins = config.get('retention', 'csv_minutes', default=30)
+        self.processed_csv_retention_mins = config.get('retention', 'processed_csv_minutes', default=30)  # NEW
         self.cleanup_interval = config.get('retention', 'cleanup_interval_seconds', default=60)
         self.running = False
 
@@ -413,6 +415,7 @@ class CleanupManager(threading.Thread):
         logging.info("Cleanup manager started")
         logging.info(f"PCAP retention: {self.pcap_retention_mins} minutes")
         logging.info(f"CSV retention: {self.csv_retention_mins} minutes")
+        logging.info(f"Processed CSV retention: {self.processed_csv_retention_mins} minutes")
         logging.info(f"Cleanup interval: {self.cleanup_interval}s")
 
         while self.running:
@@ -431,8 +434,16 @@ class CleanupManager(threading.Thread):
                     '*.csv'
                 )
 
-                if pcap_deleted > 0 or csv_deleted > 0:
-                    logging.info(f"Cleanup completed: deleted {pcap_deleted} PCAPs, {csv_deleted} CSVs")
+                # Cleanup Processed CSVs
+                processed_csv_deleted = self._cleanup_directory(
+                    self.csv_processed_dir,
+                    self.processed_csv_retention_mins,
+                    '*.csv'
+                )
+
+                if pcap_deleted > 0 or csv_deleted > 0 or processed_csv_deleted > 0:
+                    logging.info(f"Cleanup completed: deleted {pcap_deleted} PCAPs, "
+                                 f"{csv_deleted} CSVs, {processed_csv_deleted} processed CSVs")
 
                 # Sleep until next cleanup
                 time.sleep(self.cleanup_interval)
@@ -443,6 +454,7 @@ class CleanupManager(threading.Thread):
     def _cleanup_directory(self, directory, retention_minutes, pattern):
         """Clean up old files in directory"""
         if not os.path.exists(directory):
+            logging.warning(f"Cleanup directory does not exist: {directory}")
             return 0
 
         cutoff_time = datetime.now() - timedelta(minutes=retention_minutes)
