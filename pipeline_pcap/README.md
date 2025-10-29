@@ -129,12 +129,14 @@ Edit `pipeline_config.json` to match your configuration:
   "paths": {
     "pcap_dir": "/root/Thesis/pipeline_pcap/pcap",                    // - Storage for captured PCAP files
     "csv_dir": "/root/Thesis/pipeline_pcap/csv",                      // - Output directory for converted CSV files
+    "csv_processed_dir": "/root/Thesis/pipeline_pcap/processed",      // - Output directory for processed CSV files
     "log_dir": "/root/Thesis/pipeline_pcap/log",                      // - Main pipeline logging directory
     "cic_log_dir": "/root/Thesis/pipeline_pcap/log/cicflowmeter_log"  // - CICFlowMeter Java process logs
   },
   "retention": {
     "pcap_minutes": 30,                       // - Keep PCAP files for 30 minutes before deletion
     "csv_minutes": 30,                        // - Keep CSV files for 30 minutes before deletion
+    "processed_csv_minutes": 30,              // - Keep processed CSV files for 30 minutes before deletion
     "cleanup_interval_seconds": 60            // - Run cleanup check every 60 seconds
   },
   "processing": {
