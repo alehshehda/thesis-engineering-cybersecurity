@@ -10,7 +10,6 @@ import numpy as np
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 import time
 from datetime import datetime
 from pathlib import Path
