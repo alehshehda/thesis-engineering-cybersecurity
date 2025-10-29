@@ -52,7 +52,8 @@ The pipeline module captures network traffic, rotates PCAP files automatically, 
 ├── pipeline_setup.sh        # Setup and validation script  
 ├── requirements.txt         # Python dependencies 
 ├── pcap/                    # Captured PCAP files  
-├── csv/                     # Converted CSV files  
+├── csv/                     # Converted CSV files
+├── processed/               # Processed CSV files by ML module
 ├── log/                     # Pipeline logs  
 │      └── cicflowmeter_log/ # CICFlowMeter logs  
 ```
