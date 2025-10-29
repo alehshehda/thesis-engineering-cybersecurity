@@ -25,7 +25,6 @@ import signal
 import logging
 import subprocess
 import threading
-import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 from queue import Queue, Empty
@@ -381,6 +380,7 @@ class PCAPRotator(threading.Thread):
             try:
                 self.tcpdump_process.wait(timeout=5)
             except subprocess.TimeoutExpired:
+                logging.warning("tcpdump did not stop gracefully, killing process")
                 logging.warning("tcpdump did not stop gracefully, killing process")
                 self.tcpdump_process.kill()
 
