@@ -9,12 +9,14 @@
   "paths": {
     "pcap_dir": "/root/Thesis/pipeline_pcap/pcap",
     "csv_dir": "/root/Thesis/pipeline_pcap/csv",
+    "csv_processed_dir": "/root/Thesis/pipeline_pcap/processed",
     "log_dir": "/root/Thesis/pipeline_pcap/log",
     "cic_log_dir": "/root/Thesis/pipeline_pcap/log/cicflowmeter_log"
   },
   "retention": {
     "pcap_minutes": 30,
     "csv_minutes": 30,
+    "processed_csv_minutes": 30,
     "cleanup_interval_seconds": 60
   },
   "processing": {

@@ -1,7 +1,7 @@
 {
     "detection": {
-        "threshold": 0.80,
-        "min_attack_flows": 3,
+        "threshold": 0.70,
+        "min_attack_flows": 2,
         "window_size_minutes": 5,
         "window_mode": "rolling",
         "ssh_port": 22

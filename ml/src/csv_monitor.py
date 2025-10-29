@@ -76,6 +76,7 @@ class CSVMonitorService:
             'total_processed': 0,
             'total_attacks_detected': 0,
             'total_alerts_generated': 0,
+            'total_alerts_skipped': 0,
             'start_time': None
         }
 
@@ -186,6 +187,12 @@ class CSVMonitorService:
             if result.has_attacks():
                 self.stats['total_attacks_detected'] += len(result.attack_flows)
 
+                # Get alert criteria from config
+                min_attack_flows = self.config['detection']['min_attack_flows']
+                threshold = self.config['detection']['threshold']
+
+                logger.info(f"Alert criteria: min_flows={min_attack_flows}, threshold={threshold*100}%")
+
                 # Group flows by attacker
                 attacker_flows = {}
                 for attack_flow in result.attack_flows:
@@ -194,21 +201,38 @@ class CSVMonitorService:
                         attacker_flows[attacker_ip] = []
                     attacker_flows[attacker_ip].append(attack_flow)
 
-                # Generate alerts for each attacker
-                for attacker_ip, flows in attacker_flows.items():
-                    try:
-                        alert_file = self.alert_generator.generate_alert_json(
-                            attacker_ip=attacker_ip,
-                            attacker_flows=flows,
-                            csv_sources=[csv_path.name],
-                            detection_timestamp=result.timestamp
-                        )
-                        self.stats['total_alerts_generated'] += 1
-                        logger.info(f"Generated alert: {alert_file}")
-                    except Exception as e:
-                        logger.warning(f"Failed to generate alert for {attacker_ip}: {e}")
+                # Generate alerts for each attacker (ONLY if meets min_attack_flows)
+                alerts_generated = 0
+                alerts_skipped = 0
 
-                # Generate statistics JSON
+                for attacker_ip, flows in attacker_flows.items():
+                    flow_count = len(flows)
+
+                    # CHECK: Only generate alert if meets minimum flow requirement
+                    if flow_count >= min_attack_flows:
+                        try:
+                            alert_file = self.alert_generator.generate_alert_json(
+                                attacker_ip=attacker_ip,
+                                attacker_flows=flows,
+                                csv_sources=[csv_path.name],
+                                detection_timestamp=result.timestamp
+                            )
+                            self.stats['total_alerts_generated'] += 1
+                            alerts_generated += 1
+                            logger.info(f"ALERT GENERATED: {attacker_ip} with {flow_count} flows "
+                                       f"(>= {min_attack_flows} required)")
+                            logger.info(f"Alert file: {alert_file}")
+                        except Exception as e:
+                            logger.warning(f"Failed to generate alert for {attacker_ip}: {e}")
+                    else:
+                        self.stats['total_alerts_skipped'] += 1
+                        alerts_skipped += 1
+                        logger.info(f"ALERT SKIPPED: {attacker_ip} has {flow_count} flows "
+                                   f"(minimum required: {min_attack_flows})")
+
+                logger.info(f"Alert summary: {alerts_generated} generated, {alerts_skipped} skipped")
+
+                # Generate statistics JSON (even if no alerts generated)
                 try:
                     stats_file = self.alert_generator.generate_statistics_json(
                         result=result,

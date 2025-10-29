@@ -204,7 +204,7 @@ source venv/bin/activate
 ```
 Start service
 ```bash
-python3 ml_service.py start
+python3 ml_service.py
 ```
 
 ### Detection Workflow
@@ -317,7 +317,7 @@ Example statistics:
 
 ### Logs
 
-**Location**: `logs/`  
+**Location**: `log/`  
 **Format**: Rotating log files (1GB max, 5 backups)  
 **Naming**: `ml_service_YYYYMMDD.log`
 

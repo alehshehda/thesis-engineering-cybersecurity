@@ -6,7 +6,6 @@ Main service script for starting/stopping the ML detection system
 """
 
 import sys
-import os
 import signal
 import time
 import logging
@@ -174,7 +173,7 @@ class SSHDetectionService:
             file_path = models_dir / file_name
             if not file_path.exists():
                 self.logger.error(f"Required model file not found: {file_path}")
-                self.logger.error("Please train the model first using train_model.py")
+                self.logger.error("Please train the model first using src/train_model.py")
                 return False
 
         return True
@@ -244,24 +243,8 @@ def main():
     """
     Main entry point
     """
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-
-        if command == 'start':
-            service = SSHDetectionService()
-            service.start()
-        elif command == 'stop':
-            print("Stop command not implemented - use Ctrl+C or kill process")
-        elif command == 'status':
-            service = SSHDetectionService()
-            service.status()
-        else:
-            print("Usage: ml_service.py {start|stop|status}")
-            sys.exit(1)
-    else:
-        # Default: start service
-        service = SSHDetectionService()
-        service.start()
+    service = SSHDetectionService()
+    service.start()
 
 
 if __name__ == "__main__":
