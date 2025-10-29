@@ -7,13 +7,12 @@ Core ML detection logic with rolling window support
 
 import pandas as pd
 import numpy as np
-import json
 import logging
 import joblib
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, Any
 from collections import deque
 
 # Local imports
