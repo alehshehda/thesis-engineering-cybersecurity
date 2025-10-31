@@ -1,14 +1,16 @@
-pipeline_pcap/venv
-ml/venv
+pipeline_pcap/venv/
+ml/venv/
 
-pipeline_pcap/pcap
-pipeline_pcap/csv
-pipeline_pcap/processed
-pipeline_pcap/log
+pipeline_pcap/pcap/
+pipeline_pcap/csv/
+pipeline_pcap/processed/
+pipeline_pcap/log/
 
-ml/log
-ml/alerts
-ml/model
-ml/statistics
+ml/log/
+ml/alerts/
+ml/model/
+ml/statistics/
 
 *.idea
+__pycache__/
+*.pyc
