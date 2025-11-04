@@ -16,8 +16,8 @@
   },
   "opnsense": {
     "api_url": "https://192.168.20.1",
-    "api_key": "mXLyEV8x19JkxfJzVfQzVAkpWXj7uNDvywSBS82VrHaPvfmnjckcsJBU001/L54WKxYfVeMxtU9MN48h",
-    "api_secret": "A6Q42mqdLKDpJI7vbtBq4wbhI3sJTjtjxdMjI/27VFdSVg6GECWJD+L5e5h9F5jVzBuDHvKUcPEh2sO7",
+    "api_key": "YOUR API KEY",
+    "api_secret": "YOUR API SECRET",
     "verify_ssl": false,
     "timeout": 10,
     "aliases": {

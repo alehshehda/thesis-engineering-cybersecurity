@@ -1,4 +1,102 @@
 #!/bin/bash
-ip link set enp1s0 promisc on
-ip a | grep -i promisc
-echo "[>] Interface enp1s0 set on promisc mode"
+
+#==============================================================================
+# Network Interface Promiscuous Mode Script
+# Description: Enables promiscuous mode on specified network interface for packet capture
+# Requirements: sudo privileges, valid network interface
+#==============================================================================
+
+set -o pipefail
+
+#------------------------------------------------------------------------------
+# Configuration
+#------------------------------------------------------------------------------
+readonly INTERFACE="enp1s0"
+
+#------------------------------------------------------------------------------
+# Logging Functions
+#------------------------------------------------------------------------------
+log_info() {
+    echo "[INFO] $1"
+}
+
+log_success() {
+    echo "[OK] $1"
+}
+
+log_error() {
+    echo "[ERROR] $1" >&2
+}
+
+log_warn() {
+    echo "[WARN] $1" >&2
+}
+
+#------------------------------------------------------------------------------
+# Validation Functions
+#------------------------------------------------------------------------------
+check_sudo() {
+    if [[ $EUID -ne 0 ]]; then
+        log_error "This script must be run with sudo privileges"
+        exit 1
+    fi
+}
+
+check_interface_exists() {
+    log_info "Checking if interface ${INTERFACE} exists"
+
+    if ! ip link show "${INTERFACE}" &>/dev/null; then
+        log_error "Network interface not found: ${INTERFACE}"
+        log_error "Available interfaces:"
+        ip -brief link show | awk '{print "  - " $1}'
+        exit 1
+    fi
+
+    log_success "Interface ${INTERFACE} found"
+}
+
+#------------------------------------------------------------------------------
+# Main Logic
+#------------------------------------------------------------------------------
+enable_promiscuous_mode() {
+    log_info "Enabling promiscuous mode on ${INTERFACE}"
+
+    if ! sudo ip link set "${INTERFACE}" promisc on; then
+        log_error "Failed to enable promiscuous mode on ${INTERFACE}"
+        exit 1
+    fi
+
+    log_success "Promiscuous mode enabled on ${INTERFACE}"
+}
+
+verify_promiscuous_mode() {
+    log_info "Verifying promiscuous mode status"
+
+    if ip a show "${INTERFACE}" | grep -qi "PROMISC"; then
+        log_success "Interface ${INTERFACE} is in promiscuous mode"
+        echo ""
+        echo "Interface Details:"
+        ip a show "${INTERFACE}" | grep -i "promisc"
+    else
+        log_warn "Promiscuous mode may not be active on ${INTERFACE}"
+    fi
+}
+
+main() {
+    echo "=============================================="
+    echo "  Network Interface Configuration"
+    echo "=============================================="
+    echo ""
+
+    check_sudo
+    check_interface_exists
+    echo ""
+
+    enable_promiscuous_mode
+    verify_promiscuous_mode
+    echo ""
+
+    log_success "Network interface configuration complete"
+}
+
+main "$@"
