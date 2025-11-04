@@ -1,0 +1,12 @@
+{
+  "192.168.10.60": {
+    "reason": "Agent - monitoring",
+    "added": "2025-11-03T12:40:00",
+    "added_by": "admin"
+  },
+  "192.168.20.1": {
+    "reason": "OPNsense firewall - management IP",
+    "added": "2025-11-03T12:40:00",
+    "added_by": "admin"
+  }
+}

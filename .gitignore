@@ -1,5 +1,6 @@
 pipeline_pcap/venv/
 ml/venv/
+blocker/venv/
 
 pipeline_pcap/pcap/
 pipeline_pcap/csv/
@@ -10,6 +11,11 @@ ml/log/
 ml/alerts/
 ml/model/
 ml/statistics/
+
+blocker/log/
+blocker/queue/
+blocker/state/
+blocker/statistics/
 
 *.idea
 __pycache__/

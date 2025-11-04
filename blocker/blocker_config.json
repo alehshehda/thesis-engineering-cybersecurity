@@ -1,0 +1,44 @@
+{
+  "paths": {
+    "state_dir": "/root/Thesis/blocker/state",
+    "queue_dir": "/root/Thesis/blocker/queue",
+    "stats_dir": "/root/Thesis/blocker/statistics",
+    "logs_dir": "/root/Thesis/blocker/log",
+    "alerts_watch": "/root/Thesis/ml/alerts",
+    "alerts_processed": "/root/Thesis/ml/alerts/processed",
+    "whitelist": "/root/Thesis/blocker/whitelist.json"
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "max_bytes": 10485760,
+    "backup_count": 5
+  },
+  "opnsense": {
+    "api_url": "https://192.168.20.1",
+    "api_key": "YOUR API KEY",
+    "api_secret": "YOUR API SECRET",
+    "verify_ssl": false,
+    "timeout": 10,
+    "aliases": {
+      "30min": "ssh_block_30min",
+      "8hours": "ssh_block_8hours",
+      "24hours": "ssh_block_24hours",
+      "permanent": "ssh_block_permanent"
+    }
+  },
+  "blocking": {
+    "thresholds": {
+      "8hours": [0.75, 8],
+      "24hours": [0.85, 24],
+      "permanent": [0.95, 1]
+    },
+    "unblock_check_interval_seconds": 60
+  },
+  "whitelist_reload_interval_seconds": 300,
+  "retry": {
+    "queue_enabled": true,
+    "retry_interval_seconds": 30,
+    "max_attempts": 5
+  }
+}

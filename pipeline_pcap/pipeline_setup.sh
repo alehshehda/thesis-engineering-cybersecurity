@@ -1,195 +1,263 @@
 #!/bin/bash
 
+#==============================================================================
 # Pipeline Module Setup Script
-# Sets up Python environment and validates configuration for PCAP pipeline
+# Description: Sets up Python environment and validates PCAP pipeline configuration
+# Requirements: Python 3.8+, Java, tcpdump, root privileges
+#==============================================================================
 
-set -e
+set -o pipefail
 
-echo "=== Pipeline Module Setup ==="
-echo ""
+#------------------------------------------------------------------------------
+# Configuration
+#------------------------------------------------------------------------------
+readonly THESIS_ROOT="/root/Thesis"
+readonly MODULE_DIR="${THESIS_ROOT}/pipeline_pcap"
+readonly VENV_DIR="${MODULE_DIR}/venv"
+readonly CONFIG_FILE="pipeline_config.json"
+readonly REQUIREMENTS_FILE="requirements.txt"
+readonly REQUIRED_PYTHON_VERSION="3.8"
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+readonly REQUIRED_DIRS=(
+    "pcap"
+    "csv"
+    "log"
+    "log/cicflowmeter_log"
+)
 
-# Check Python version
-echo "Checking Python version..."
-PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
-REQUIRED_VERSION="3.8"
+#------------------------------------------------------------------------------
+# Logging Functions
+#------------------------------------------------------------------------------
+log_info() {
+    echo "[INFO] $1"
+}
 
-if [[ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]]; then
-    echo -e "${RED}ERROR: Python 3.8 or higher is required (found $PYTHON_VERSION)${NC}"
-    exit 1
-fi
-echo -e "${GREEN}Python version: $PYTHON_VERSION${NC}"
-echo ""
+log_success() {
+    echo "[OK] $1"
+}
 
-# Check if virtual environment exists
-if [ -d "venv" ]; then
-    echo -e "${YELLOW}Virtual environment already exists${NC}"
-    read -p "Do you want to recreate it? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Removing existing virtual environment..."
-        rm -rf venv
-    fi
-fi
+log_error() {
+    echo "[ERROR] $1" >&2
+}
 
-# Create virtual environment
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
-    echo -e "${GREEN}Virtual environment created${NC}"
-fi
-echo ""
+log_warn() {
+    echo "[WARN] $1" >&2
+}
 
-# Activate virtual environment
-echo "Activating virtual environment..."
-source venv/bin/activate
-
-# Upgrade pip
-echo "Upgrading pip..."
-pip install --upgrade pip > /dev/null 2>&1
-
-# Install requirements
-if [ -f "requirements.txt" ]; then
-    echo "Installing requirements from requirements.txt..."
-    pip install -r requirements.txt
-    echo -e "${GREEN}Requirements installed${NC}"
-else
-    echo -e "${RED}ERROR: requirements.txt not found${NC}"
-    exit 1
-fi
-echo ""
-
-# Verify directories
-echo "Verifying directory structure..."
-REQUIRED_DIRS=("pcap" "csv" "log" "log/cicflowmeter_log")
-
-for dir in "${REQUIRED_DIRS[@]}"; do
-    if [ ! -d "$dir" ]; then
-        echo "Creating directory: $dir"
-        mkdir -p "$dir"
-    fi
-done
-echo -e "${GREEN}Directory structure verified${NC}"
-echo ""
-
-# Verify pipeline_config.json
-echo "Checking configuration file..."
-if [ ! -f "pipeline_config.json" ]; then
-    echo -e "${RED}ERROR: pipeline_config.json not found${NC}"
-    echo "Please create pipeline_config.json before running setup"
-    exit 1
-fi
-
-# Validate JSON syntax
-python3 -c "import json; json.load(open('pipeline_config.json'))" 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}pipeline_config.json is valid${NC}"
-else
-    echo -e "${RED}ERROR: pipeline_config.json has invalid JSON syntax${NC}"
-    exit 1
-fi
-echo ""
-
-# Check for cic_cmd.sh
-echo "Checking CICFlowMeter wrapper script..."
-if [ ! -f "cic_cmd.sh" ]; then
-    echo -e "${RED}ERROR: cic_cmd.sh not found${NC}"
-    echo "Please ensure cic_cmd.sh exists in the pipeline directory"
-    exit 1
-fi
-
-# Make cic_cmd.sh executable
-chmod +x cic_cmd.sh 2>/dev/null || true
-if [ -x "cic_cmd.sh" ]; then
-    echo -e "${GREEN}cic_cmd.sh is executable${NC}"
-else
-    echo -e "${YELLOW}WARNING: Could not make cic_cmd.sh executable${NC}"
-    echo "You may need to run: chmod +x cic_cmd.sh"
-fi
-echo ""
-
-# Check Java installation
-echo "Checking Java installation..."
-if command -v java &> /dev/null; then
-    JAVA_VERSION=$(java -version 2>&1 | head -n 1)
-    echo -e "${GREEN}Java found: $JAVA_VERSION${NC}"
-else
-    echo -e "${RED}ERROR: Java not found${NC}"
-    echo "CICFlowMeter requires Java to be installed"
-    exit 1
-fi
-echo ""
-
-# Check CICFlowMeter installation
-echo "Checking CICFlowMeter installation..."
-CONFIG_CIC_PATH=$(python3 -c "import json; print(json.load(open('pipeline_config.json'))['java_cicflowmeter']['cic_cmd_script'])" 2>/dev/null)
-
-if [ -z "$CONFIG_CIC_PATH" ]; then
-    echo -e "${YELLOW}WARNING: Could not read CICFlowMeter path from config${NC}"
-else
-    if [ -f "$CONFIG_CIC_PATH" ]; then
-        echo -e "${GREEN}CICFlowMeter script found: $CONFIG_CIC_PATH${NC}"
-    else
-        echo -e "${YELLOW}WARNING: CICFlowMeter script not found: $CONFIG_CIC_PATH${NC}"
-        echo "Pipeline may fail if CICFlowMeter is not properly installed"
-    fi
-fi
-echo ""
-
-# Check network interface
-echo "Checking network interface..."
-CONFIG_INTERFACE=$(python3 -c "import json; print(json.load(open('pipeline_config.json'))['capture']['interface'])" 2>/dev/null)
-
-if [ -z "$CONFIG_INTERFACE" ]; then
-    echo -e "${YELLOW}WARNING: Could not read interface from config${NC}"
-else
-    if ip link show "$CONFIG_INTERFACE" &> /dev/null; then
-        echo -e "${GREEN}Network interface found: $CONFIG_INTERFACE${NC}"
-    else
-        echo -e "${RED}ERROR: Network interface not found: $CONFIG_INTERFACE${NC}"
-        echo "Available interfaces:"
-        ip -brief link show | awk '{print "  - " $1}'
-        echo ""
-        echo "Please update pipeline_config.json with a valid interface"
+#------------------------------------------------------------------------------
+# Validation Functions
+#------------------------------------------------------------------------------
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+        log_error "This script must be run with root privileges"
         exit 1
     fi
-fi
-echo ""
+    log_success "Running with root privileges"
+}
 
-# Check for root privileges requirement
-echo "Checking privileges..."
-if [ "$EUID" -eq 0 ]; then
-    echo -e "${GREEN}Running as root (required for packet capture)${NC}"
-else
-    echo -e "${YELLOW}WARNING: Not running as root${NC}"
-    echo "The pipeline requires root privileges to capture packets"
-    echo "Run the pipeline with: sudo python3 pipeline_pcap.py"
-fi
-echo ""
+check_python_version() {
+    log_info "Checking Python version"
 
-# Check tcpdump
-echo "Checking tcpdump installation..."
-if command -v tcpdump &> /dev/null; then
-    TCPDUMP_VERSION=$(tcpdump --version 2>&1 | head -n 1)
-    echo -e "${GREEN}tcpdump found: $TCPDUMP_VERSION${NC}"
-else
-    echo -e "${RED}ERROR: tcpdump not found${NC}"
-    echo "Install with: sudo apt-get install tcpdump"
-    exit 1
-fi
-echo ""
+    if ! command -v python3 &>/dev/null; then
+        log_error "Python 3 is not installed"
+        exit 1
+    fi
 
-# Summary
-echo "=== Setup Complete ==="
-echo ""
-echo "To activate the environment, run:"
-echo "  source venv/bin/activate"
-echo ""
-echo "To start the pipeline, run:"
-echo "  python3 pipeline_pcap.py"
-echo ""
+    local python_version
+    python_version=$(python3 --version 2>&1 | awk '{print $2}')
+
+    if [[ "$(printf '%s\n' "${REQUIRED_PYTHON_VERSION}" "${python_version}" | sort -V | head -n1)" != "${REQUIRED_PYTHON_VERSION}" ]]; then
+        log_error "Python ${REQUIRED_PYTHON_VERSION}+ is required (found ${python_version})"
+        exit 1
+    fi
+
+    log_success "Python version: ${python_version}"
+}
+
+check_java() {
+    log_info "Checking Java installation"
+
+    if ! command -v java &>/dev/null; then
+        log_error "Java is not installed (required for CICFlowMeter)"
+        exit 1
+    fi
+
+    local java_version
+    java_version=$(java -version 2>&1 | head -n 1)
+    log_success "Java found: ${java_version}"
+}
+
+check_tcpdump() {
+    log_info "Checking tcpdump installation"
+
+    if ! command -v tcpdump &>/dev/null; then
+        log_error "tcpdump is not installed"
+        log_error "Install with: sudo apt-get install tcpdump"
+        exit 1
+    fi
+
+    local tcpdump_version
+    tcpdump_version=$(tcpdump --version 2>&1 | head -n 1)
+    log_success "tcpdump found: ${tcpdump_version}"
+}
+
+#------------------------------------------------------------------------------
+# Setup Functions
+#------------------------------------------------------------------------------
+setup_virtual_environment() {
+    log_info "Setting up Python virtual environment"
+
+    if [[ -d "${VENV_DIR}" ]]; then
+        log_warn "Virtual environment already exists"
+        read -p "Do you want to recreate it? (y/N): " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Removing existing virtual environment"
+            rm -rf "${VENV_DIR}"
+        else
+            log_info "Using existing virtual environment"
+            return 0
+        fi
+    fi
+
+    if ! python3 -m venv "${VENV_DIR}"; then
+        log_error "Failed to create virtual environment"
+        exit 1
+    fi
+
+    log_success "Virtual environment created"
+}
+
+install_dependencies() {
+    log_info "Installing Python dependencies"
+
+    if [[ ! -f "${REQUIREMENTS_FILE}" ]]; then
+        log_error "${REQUIREMENTS_FILE} not found"
+        exit 1
+    fi
+
+    source "${VENV_DIR}/bin/activate"
+
+    if ! pip install --upgrade pip setuptools wheel >/dev/null 2>&1; then
+        log_error "Failed to upgrade pip"
+        exit 1
+    fi
+
+    if ! pip install -r "${REQUIREMENTS_FILE}" >/dev/null 2>&1; then
+        log_error "Failed to install requirements"
+        exit 1
+    fi
+
+    log_success "Dependencies installed"
+}
+
+create_directory_structure() {
+    log_info "Creating directory structure"
+
+    for dir in "${REQUIRED_DIRS[@]}"; do
+        if ! mkdir -p "${dir}"; then
+            log_error "Failed to create directory: ${dir}"
+            exit 1
+        fi
+    done
+
+    log_success "Directory structure created"
+}
+
+validate_config_file() {
+    log_info "Validating configuration file"
+
+    if [[ ! -f "${CONFIG_FILE}" ]]; then
+        log_error "${CONFIG_FILE} not found"
+        exit 1
+    fi
+
+    if ! python3 -c "import json; json.load(open('${CONFIG_FILE}'))" 2>/dev/null; then
+        log_error "${CONFIG_FILE} has invalid JSON syntax"
+        exit 1
+    fi
+
+    log_success "Configuration file is valid"
+}
+
+check_cic_wrapper() {
+    log_info "Checking CICFlowMeter wrapper script"
+
+    if [[ ! -f "cic_cmd.sh" ]]; then
+        log_error "cic_cmd.sh not found"
+        exit 1
+    fi
+
+    if ! chmod +x cic_cmd.sh 2>/dev/null; then
+        log_warn "Could not make cic_cmd.sh executable"
+    else
+        log_success "cic_cmd.sh is executable"
+    fi
+}
+
+check_network_interface() {
+    log_info "Checking network interface"
+
+    local interface
+    interface=$(python3 -c "import json; print(json.load(open('${CONFIG_FILE}'))['capture']['interface'])" 2>/dev/null)
+
+    if [[ -z "${interface}" ]]; then
+        log_warn "Could not read interface from config"
+        return 0
+    fi
+
+    if ! ip link show "${interface}" &>/dev/null; then
+        log_error "Network interface not found: ${interface}"
+        log_error "Available interfaces:"
+        ip -brief link show | awk '{print "  - " $1}'
+        exit 1
+    fi
+
+    log_success "Network interface found: ${interface}"
+}
+
+#------------------------------------------------------------------------------
+# Main Logic
+#------------------------------------------------------------------------------
+main() {
+    echo "=============================================="
+    echo "  Pipeline Module Setup"
+    echo "=============================================="
+    echo ""
+
+    check_root
+    check_python_version
+    check_java
+    check_tcpdump
+    echo ""
+
+    create_directory_structure
+    setup_virtual_environment
+    install_dependencies
+    echo ""
+
+    validate_config_file
+    check_cic_wrapper
+    check_network_interface
+    echo ""
+
+    echo "=============================================="
+    echo "  Setup Summary"
+    echo "=============================================="
+    echo "Module:               Pipeline PCAP"
+    echo "Status:               Ready"
+    echo "Virtual Environment:  ${VENV_DIR}"
+    echo "Configuration:        ${CONFIG_FILE}"
+    echo ""
+    echo "Next Steps:"
+    echo "  1. Activate environment:"
+    echo "     source ${VENV_DIR}/bin/activate"
+    echo "  2. Start pipeline:"
+    echo "     python3 pipeline_pcap.py"
+    echo ""
+
+    log_success "Pipeline module setup complete"
+}
+
+main "$@"
