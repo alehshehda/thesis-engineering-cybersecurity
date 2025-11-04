@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #==============================================================================
-# ML Module Setup Script
-# Description: Sets up Python environment and validates ML module configuration
-# Requirements: Python 3.8+, CICIDS2017 dataset, root privileges
+# Blocker Module Setup Script
+# Description: Sets up Python environment and validates blocker configuration
+# Requirements: Python 3.8+, OPNsense API access, root privileges
 #==============================================================================
 
 set -o pipefail
@@ -12,18 +12,19 @@ set -o pipefail
 # Configuration
 #------------------------------------------------------------------------------
 readonly THESIS_ROOT="/root/Thesis"
-readonly MODULE_DIR="${THESIS_ROOT}/ml"
+readonly MODULE_DIR="${THESIS_ROOT}/blocker"
 readonly VENV_DIR="${MODULE_DIR}/venv"
-readonly CONFIG_FILE="ml_config.json"
-readonly REQUIREMENTS_FILE="requirements.txt"
+readonly CONFIG_FILE="${MODULE_DIR}/blocker_config.json"
+readonly WHITELIST_FILE="${MODULE_DIR}/whitelist.json"
+readonly REQUIREMENTS_FILE="${MODULE_DIR}/requirements.txt"
 readonly REQUIRED_PYTHON_VERSION="3.8"
 
 readonly REQUIRED_DIRS=(
-    "alerts"
-    "log"
-    "model"
-    "statistics"
-    "src"
+    "${MODULE_DIR}/state"
+    "${MODULE_DIR}/queue"
+    "${MODULE_DIR}/statistics"
+    "${MODULE_DIR}/log"
+    "${THESIS_ROOT}/ml/alerts/processed"
 )
 
 #------------------------------------------------------------------------------
@@ -139,38 +140,42 @@ create_directory_structure() {
     log_success "Directory structure created"
 }
 
-validate_config_file() {
-    log_info "Validating configuration file"
+validate_config_files() {
+    log_info "Validating configuration files"
 
     if [[ ! -f "${CONFIG_FILE}" ]]; then
-        log_error "${CONFIG_FILE} not found"
+        log_error "blocker_config.json not found at ${CONFIG_FILE}"
         exit 1
     fi
 
     if ! python3 -c "import json; json.load(open('${CONFIG_FILE}'))" 2>/dev/null; then
-        log_error "${CONFIG_FILE} has invalid JSON syntax"
+        log_error "blocker_config.json has invalid JSON syntax"
         exit 1
     fi
 
-    log_success "Configuration file is valid"
+    log_success "blocker_config.json is valid"
+
+    if [[ ! -f "${WHITELIST_FILE}" ]]; then
+        log_warn "whitelist.json not found at ${WHITELIST_FILE}"
+    else
+        if ! python3 -c "import json; json.load(open('${WHITELIST_FILE}'))" 2>/dev/null; then
+            log_error "whitelist.json has invalid JSON syntax"
+            exit 1
+        fi
+        log_success "whitelist.json is valid"
+    fi
 }
 
-check_dataset() {
-    log_info "Checking CICIDS2017 dataset"
+set_permissions() {
+    log_info "Setting permissions"
 
-    local dataset_path
-    dataset_path=$(python3 -c "import json; print(json.load(open('${CONFIG_FILE}'))['paths']['dataset'])" 2>/dev/null)
-
-    if [[ -z "${dataset_path}" ]]; then
-        log_warn "Could not read dataset path from config"
-        return 0
+    if [[ -f "${MODULE_DIR}/blocker.py" ]]; then
+        chmod +x "${MODULE_DIR}/blocker.py" 2>/dev/null
     fi
 
-    if [[ ! -d "${dataset_path}" ]]; then
-        log_warn "Dataset directory not found: ${dataset_path}"
-    else
-        log_success "Dataset directory found: ${dataset_path}"
-    fi
+    chmod -R 755 "${MODULE_DIR}" 2>/dev/null
+
+    log_success "Permissions set"
 }
 
 #------------------------------------------------------------------------------
@@ -178,7 +183,7 @@ check_dataset() {
 #------------------------------------------------------------------------------
 main() {
     echo "=============================================="
-    echo "  ML Module Setup"
+    echo "  Blocker Module Setup"
     echo "=============================================="
     echo ""
 
@@ -191,28 +196,27 @@ main() {
     install_dependencies
     echo ""
 
-    validate_config_file
-    check_dataset
+    validate_config_files
+    set_permissions
     echo ""
 
     echo "=============================================="
     echo "  Setup Summary"
     echo "=============================================="
-    echo "Module:               ML Engine"
+    echo "Module:               Blocker"
     echo "Status:               Ready"
     echo "Virtual Environment:  ${VENV_DIR}"
     echo "Configuration:        ${CONFIG_FILE}"
     echo ""
     echo "Next Steps:"
-    echo "  1. Activate environment:"
+    echo "  1. Verify OPNsense API credentials in config"
+    echo "  2. Activate environment:"
     echo "  source ${VENV_DIR}/bin/activate"
-    echo "  2. Train model:"
-    echo "  python3 src/train_model.py"
-    echo "  3. Start ML service:"
-    echo "  python3 ml_service.py"
+    echo "  3. Start blocker: python3 blocker.py"
+    echo "  python3 blocker.py"
     echo ""
 
-    log_success "ML module setup complete"
+    log_success "Blocker module setup complete"
 }
 
 main "$@"
