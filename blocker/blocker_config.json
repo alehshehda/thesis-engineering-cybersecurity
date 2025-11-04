@@ -32,7 +32,7 @@
       "30min": [0.70, 0.75],
       "8hours": [0.75, 8],
       "24hours": [0.85, 24],
-      "permanent": [0.95, 999999]
+      "permanent": [0.95, 999999999]
     },
     "unblock_check_interval_seconds": 60
   },
