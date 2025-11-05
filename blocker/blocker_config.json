@@ -36,7 +36,7 @@
     },
     "unblock_check_interval_seconds": 60
   },
-  "whitelist_reload_interval_seconds": 300,
+  "whitelist_reload_interval_seconds": 60,
   "retry": {
     "queue_enabled": true,
     "retry_interval_seconds": 30,
